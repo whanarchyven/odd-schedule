@@ -17,6 +17,11 @@ import {
   YAxis,
 } from "recharts";
 import { api } from "@/convex/_generated/api";
+import {
+  financingLabel,
+  sourceLabel,
+  visitTypeLabel,
+} from "@/entities/admission/model/options";
 import type { Dashboard, StatEntry } from "@/entities/stat/model/types";
 import { AppShell, PageHeader } from "@/widgets/app-shell/ui/AppShell";
 import { formatDateRu } from "@/shared/lib/date";
@@ -39,6 +44,9 @@ export function StatsDashboard() {
   const stats = useQuery(api.stats.dashboard, { startDate, endDate }) as
     | Dashboard
     | undefined;
+  const bySource = mapEntries(stats?.bySource ?? [], sourceLabel);
+  const byFinancing = mapEntries(stats?.byFinancing ?? [], financingLabel);
+  const byVisitType = mapEntries(stats?.byVisitType ?? [], visitTypeLabel);
 
   return (
     <AppShell>
@@ -95,13 +103,13 @@ export function StatsDashboard() {
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
-                data={stats?.bySource ?? []}
+                data={bySource}
                 dataKey="value"
                 nameKey="name"
                 outerRadius={92}
                 label
               >
-                {(stats?.bySource ?? []).map((entry, index) => (
+                {bySource.map((entry, index) => (
                   <Cell
                     key={entry.name}
                     fill={["#000000", "#737373", "#e5e5e5"][index % 3]}
@@ -137,11 +145,22 @@ export function StatsDashboard() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <ListCard title="Финансирование" items={stats?.byFinancing ?? []} />
-        <ListCard title="Первичный / повторный" items={stats?.byVisitType ?? []} />
-        <ListCard title="Списки по источникам" items={stats?.bySource ?? []} />
+        <ListCard title="Финансирование" items={byFinancing} />
+        <ListCard title="Первичный / повторный" items={byVisitType} />
+        <ListCard title="Списки по источникам" items={bySource} />
       </div>
     </AppShell>
+  );
+}
+
+function mapEntries(items: StatEntry[], label: (value: string) => string) {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    const name = label(item.name);
+    totals.set(name, (totals.get(name) ?? 0) + item.value);
+  }
+  return Array.from(totals, ([name, value]) => ({ name, value })).sort(
+    (left, right) => right.value - left.value,
   );
 }
 

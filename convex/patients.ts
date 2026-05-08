@@ -9,8 +9,8 @@ const patientInput = {
   firstName: v.string(),
   lastName: v.string(),
   middleName: v.optional(v.string()),
-  birthDate: v.string(),
-  phone: v.string(),
+  birthDate: v.optional(v.string()),
+  phone: v.optional(v.string()),
   omsNumber: v.optional(v.string()),
   medicalRecordNumber: v.optional(v.string()),
   snils: v.optional(v.string()),
@@ -24,7 +24,7 @@ function composePatient(args: {
   omsNumber?: string;
   medicalRecordNumber?: string;
   snils?: string;
-  phone: string;
+  phone?: string;
 }) {
   const name = fullName(args);
   return {
@@ -76,6 +76,27 @@ export const listPage = query({
       .withIndex("by_createdAt")
       .order("desc")
       .paginate(args.paginationOpts);
+  },
+});
+
+export const listForPagination = query({
+  args: { query: v.optional(v.string()), limit: v.optional(v.number()) },
+  returns: v.array(v.any()),
+  handler: async (ctx, args) => {
+    await requireDoctorOrAdmin(ctx);
+    const limit = Math.min(args.limit ?? 10000, 10000);
+    const value = args.query?.trim();
+    if (value && value.length >= 2) {
+      return await ctx.db
+        .query("patients")
+        .withSearchIndex("search_patients", (q) => q.search("searchText", value))
+        .take(limit);
+    }
+    return await ctx.db
+      .query("patients")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(limit);
   },
 });
 

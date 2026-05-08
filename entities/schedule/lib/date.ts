@@ -26,7 +26,10 @@ export const weekdays = [
 ];
 
 export function dateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function daysInYear(year: number) {
@@ -41,7 +44,8 @@ export function daysInYear(year: number) {
   return days;
 }
 
-export function calculateAge(birthDate: string, onDate: string) {
+export function calculateAge(birthDate: string | undefined, onDate: string) {
+  if (!birthDate) return null;
   const birth = new Date(`${birthDate}T00:00:00`);
   const current = new Date(`${onDate}T00:00:00`);
   let result = current.getFullYear() - birth.getFullYear();
@@ -61,17 +65,14 @@ export function weekdayMeta(date: Date | string) {
 }
 
 export function dayTitle(date: Date) {
-  return date.toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-  });
+  return formatDateRu(dateKey(date));
 }
 
 export function nextWeekDays(fromDate: string) {
   const start = new Date(`${fromDate}T00:00:00`);
   start.setDate(start.getDate() + 1);
   const weekday = start.getDay() || 7;
-  start.setDate(start.getDate() + (8 - weekday));
+  start.setDate(start.getDate() + ((8 - weekday) % 7));
   return Array.from({ length: 7 }, (_, index) => {
     const day = new Date(start);
     day.setDate(start.getDate() + index);

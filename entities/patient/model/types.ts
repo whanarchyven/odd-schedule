@@ -7,8 +7,8 @@ export type PatientRow = {
   lastName?: string;
   middleName?: string;
   fullName: string;
-  birthDate: string;
-  phone: string;
+  birthDate?: string;
+  phone?: string;
   omsNumber?: string;
   snils?: string;
   medicalRecordNumber?: string;

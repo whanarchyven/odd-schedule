@@ -23,7 +23,8 @@ export function dateKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-export function calculateAge(birthDate: string, onDate: string) {
+export function calculateAge(birthDate: string | undefined, onDate: string) {
+  if (!birthDate) return null;
   const birth = new Date(`${birthDate}T00:00:00`);
   const current = new Date(`${onDate}T00:00:00`);
   let age = current.getFullYear() - birth.getFullYear();

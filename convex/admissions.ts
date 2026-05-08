@@ -10,21 +10,46 @@ const admissionInput = {
   date: v.string(),
   patientId: v.id("patients"),
   departmentId: v.id("departments"),
-  diagnosisId: v.id("diagnoses"),
-  doctorId: v.id("doctors"),
-  financing: v.union(v.literal("oms"), v.literal("private")),
+  diagnosisId: v.optional(v.id("diagnoses")),
+  customDiagnosis: v.optional(v.string()),
+  doctorId: v.optional(v.id("doctors")),
+  financing: v.union(
+    v.literal("oms"),
+    v.literal("vmpOms"),
+    v.literal("vmp"),
+    v.literal("paid"),
+    v.literal("fund"),
+    v.literal("private"),
+  ),
   visitType: v.union(v.literal("primary"), v.literal("repeat")),
   isConfirmed: v.boolean(),
-  source: v.union(v.literal("osmp"), v.literal("appointment"), v.literal("private")),
+  source: v.optional(
+    v.union(
+      v.literal("planned"),
+      v.literal("tmk"),
+      v.literal("office"),
+      v.literal("kdc"),
+      v.literal("osmp"),
+      v.literal("appointment"),
+      v.literal("private"),
+    ),
+  ),
   comment: v.optional(v.string()),
 };
 
 type AdmissionInput = {
   date: string;
-  financing: "oms" | "private";
+  financing: "oms" | "vmpOms" | "vmp" | "paid" | "fund" | "private";
   visitType: "primary" | "repeat";
   isConfirmed: boolean;
-  source: "osmp" | "appointment" | "private";
+  source?:
+    | "planned"
+    | "tmk"
+    | "office"
+    | "kdc"
+    | "osmp"
+    | "appointment"
+    | "private";
 };
 
 async function applyDailyDelta(
@@ -43,7 +68,20 @@ async function applyDailyDelta(
       (existing?.unconfirmed ?? 0) + (!admission.isConfirmed ? delta : 0),
     oms: (existing?.oms ?? 0) + (admission.financing === "oms" ? delta : 0),
     private:
-      (existing?.private ?? 0) + (admission.financing === "private" ? delta : 0),
+      (existing?.private ?? 0) +
+      (admission.financing === "private" || admission.financing === "paid" ? delta : 0),
+    vmpOms:
+      (existing?.vmpOms ?? 0) +
+      (admission.financing === "vmpOms" ? delta : 0),
+    vmp:
+      (existing?.vmp ?? 0) +
+      (admission.financing === "vmp" ? delta : 0),
+    paid:
+      (existing?.paid ?? 0) +
+      (admission.financing === "paid" ? delta : 0),
+    fund:
+      (existing?.fund ?? 0) +
+      (admission.financing === "fund" ? delta : 0),
     primary:
       (existing?.primary ?? 0) + (admission.visitType === "primary" ? delta : 0),
     repeat:
@@ -56,6 +94,18 @@ async function applyDailyDelta(
       private:
         (existing?.bySource.private ?? 0) +
         (admission.source === "private" ? delta : 0),
+      planned:
+        (existing?.bySource.planned ?? 0) +
+        (admission.source === "planned" ? delta : 0),
+      tmk:
+        (existing?.bySource.tmk ?? 0) +
+        (admission.source === "tmk" ? delta : 0),
+      office:
+        (existing?.bySource.office ?? 0) +
+        (admission.source === "office" ? delta : 0),
+      kdc:
+        (existing?.bySource.kdc ?? 0) +
+        (admission.source === "kdc" ? delta : 0),
     },
     updatedAt: Date.now(),
   };
@@ -74,8 +124,8 @@ async function enrichAdmission(
     await Promise.all([
       ctx.db.get(admission.patientId),
       ctx.db.get(admission.departmentId),
-      ctx.db.get(admission.diagnosisId),
-      ctx.db.get(admission.doctorId),
+      admission.diagnosisId ? ctx.db.get(admission.diagnosisId) : null,
+      admission.doctorId ? ctx.db.get(admission.doctorId) : null,
     ]);
   return {
     ...admission,
@@ -151,6 +201,9 @@ export const create = mutation({
   returns: v.id("admissions"),
   handler: async (ctx, args) => {
     const profile = await requireDoctorOrAdmin(ctx);
+    if (!args.diagnosisId && !args.customDiagnosis?.trim()) {
+      throw new Error("Укажите МКБ-10 или диагноз вручную");
+    }
     const now = Date.now();
     const id = await ctx.db.insert("admissions", {
       ...args,
@@ -180,12 +233,16 @@ export const update = mutation({
     const profile = await requireDoctorOrAdmin(ctx);
     const existing = await ctx.db.get(args.admissionId);
     if (!existing) throw new Error("Госпитализация не найдена");
+    if (!args.diagnosisId && !args.customDiagnosis?.trim()) {
+      throw new Error("Укажите МКБ-10 или диагноз вручную");
+    }
     await applyDailyDelta(ctx, existing, -1);
     await ctx.db.patch(args.admissionId, {
       date: args.date,
       patientId: args.patientId,
       departmentId: args.departmentId,
       diagnosisId: args.diagnosisId,
+      customDiagnosis: args.customDiagnosis,
       doctorId: args.doctorId,
       financing: args.financing,
       visitType: args.visitType,

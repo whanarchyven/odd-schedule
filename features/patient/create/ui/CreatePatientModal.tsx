@@ -21,8 +21,8 @@ export function CreatePatientModal({
       lastName: String(form.get("lastName")),
       firstName: String(form.get("firstName")),
       middleName: String(form.get("middleName") || "") || undefined,
-      birthDate: String(form.get("birthDate")),
-      phone: String(form.get("phone")),
+      birthDate: String(form.get("birthDate") || "") || undefined,
+      phone: String(form.get("phone") || "") || undefined,
       omsNumber: String(form.get("omsNumber") || "") || undefined,
       medicalRecordNumber:
         String(form.get("medicalRecordNumber") || "") || undefined,
@@ -48,11 +48,11 @@ export function CreatePatientModal({
         <Field label="Отчество">
           <Input name="middleName" />
         </Field>
-        <Field label="Дата рождения*">
-          <Input name="birthDate" type="date" required />
+        <Field label="Дата рождения">
+          <Input name="birthDate" type="date" />
         </Field>
-        <Field label="Телефон*">
-          <Input name="phone" required />
+        <Field label="Телефон">
+          <Input name="phone" />
         </Field>
         <Field label="Полис ОМС">
           <Input name="omsNumber" />

@@ -20,14 +20,13 @@ export default function SignIn() {
             <Activity size={24} />
           </div>
           <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">
-            Стационар
+            НЦЗД
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
-            Запись на госпитализацию
+            График госпитализаций
           </h1>
           <p className="mt-3 text-sm leading-6 text-neutral-500">
-            Войдите как сотрудник. Первый пользователь станет администратором,
-            последующие врачи должны быть предварительно созданы в админ-разделе.
+            Войдите как сотрудник
           </p>
         </div>
         <Card>
@@ -73,16 +72,16 @@ export default function SignIn() {
             </Button>
           </form>
           <div className="mt-4 flex justify-center gap-2 text-sm">
-            <span className="text-neutral-500">
+            {/* <span className="text-neutral-500">
               {flow === "signIn" ? "Нет учётной записи?" : "Уже есть пароль?"}
-            </span>
-            <button
+            </span> */}
+            {/* <button
               type="button"
               className="font-medium underline underline-offset-4"
               onClick={() => setFlow(flow === "signIn" ? "signUp" : "signIn")}
             >
               {flow === "signIn" ? "Зарегистрироваться" : "Войти"}
-            </button>
+            </button> */}
           </div>
           {error && (
             <div className="mt-4 rounded-[10px] border border-[#c22b10]/30 bg-[#c22b10]/10 p-3">

@@ -43,8 +43,8 @@ export function PatientsTable({
                 {patient.fullName}
                 <Pencil size={13} className="text-neutral-400" />
               </span>
-              <span>{formatDateRu(patient.birthDate)}</span>
-              <span>{patient.phone}</span>
+              <span>{patient.birthDate ? formatDateRu(patient.birthDate) : "—"}</span>
+              <span>{patient.phone ?? "—"}</span>
               <span className="font-mono text-xs">{patient.omsNumber ?? "—"}</span>
               <span className="font-mono text-xs">{patient.snils ?? "—"}</span>
               <span className="font-mono text-xs">

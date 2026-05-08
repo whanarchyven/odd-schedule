@@ -11,6 +11,13 @@ import type {
   EntityOption,
   PatientOption,
 } from "@/entities/admission/model/types";
+import {
+  type AdmissionSource,
+  type Financing,
+  financingOptions,
+  sourceLabel,
+  sourceOptions,
+} from "@/entities/admission/model/options";
 import { formatDateRu } from "@/shared/lib/date";
 import { Button, Field, Input, Modal, Select, Textarea } from "@/shared/ui";
 
@@ -59,17 +66,23 @@ export function EditAdmissionModal({
     event.preventDefault();
     if (!admission || !selectedPatientId) return;
     const form = new FormData(event.currentTarget);
+    const diagnosisId = String(form.get("diagnosisId") || "");
+    const customDiagnosis = String(form.get("customDiagnosis") || "").trim();
+    const doctorId = String(form.get("doctorId") || "");
+    const source = String(form.get("source") || "");
+    if (!diagnosisId && !customDiagnosis) return;
     await updateAdmission({
       admissionId: admission._id,
       date: String(form.get("date")),
       patientId: selectedPatientId,
       departmentId: String(form.get("departmentId")) as Id<"departments">,
-      diagnosisId: String(form.get("diagnosisId")) as Id<"diagnoses">,
-      doctorId: String(form.get("doctorId")) as Id<"doctors">,
-      financing: String(form.get("financing")) as "oms" | "private",
+      diagnosisId: diagnosisId ? (diagnosisId as Id<"diagnoses">) : undefined,
+      customDiagnosis: customDiagnosis || undefined,
+      doctorId: doctorId ? (doctorId as Id<"doctors">) : undefined,
+      financing: String(form.get("financing")) as Financing,
       visitType: String(form.get("visitType")) as "primary" | "repeat",
       isConfirmed: form.get("isConfirmed") === "on",
-      source: String(form.get("source")) as "osmp" | "appointment" | "private",
+      source: source ? (source as AdmissionSource) : undefined,
       comment: String(form.get("comment") || "") || undefined,
     });
     onClose();
@@ -110,12 +123,21 @@ export function EditAdmissionModal({
             </div>
           </Field>
           <EntitySelect label="Отделение" name="departmentId" items={departments} defaultValue={admission.departmentId} />
-          <EntitySelect label="МКБ-10" name="diagnosisId" items={diagnoses} defaultValue={admission.diagnosisId} withCode />
-          <EntitySelect label="Врач" name="doctorId" items={doctors} defaultValue={admission.doctorId} />
+          <EntitySelect label="МКБ-10" name="diagnosisId" items={diagnoses} defaultValue={admission.diagnosisId ?? ""} withCode required={false} />
+          <Field label="Диагноз вручную">
+            <Input name="customDiagnosis" defaultValue={admission.customDiagnosis ?? ""} placeholder="Если МКБ не выбран" />
+          </Field>
+          <EntitySelect label="Врач" name="doctorId" items={doctors} defaultValue={admission.doctorId ?? ""} required={false} />
           <Field label="Финансирование">
             <Select name="financing" defaultValue={admission.financing}>
-              <option value="oms">ОМС</option>
-              <option value="private">Частное</option>
+              {admission.financing === "private" ? (
+                <option value="private">ПЛАТНО</option>
+              ) : null}
+              {financingOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </Select>
           </Field>
           <Field label="Приём">
@@ -125,10 +147,16 @@ export function EditAdmissionModal({
             </Select>
           </Field>
           <Field label="Источник">
-            <Select name="source" defaultValue={admission.source}>
-              <option value="osmp">ОСМП</option>
-              <option value="appointment">Запись</option>
-              <option value="private">Частная</option>
+            <Select name="source" defaultValue={admission.source ?? ""}>
+              <option value="">Не указан</option>
+              {admission.source && ["osmp", "appointment", "private"].includes(admission.source) ? (
+                <option value={admission.source}>{sourceLabel(admission.source)}</option>
+              ) : null}
+              {sourceOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </Select>
           </Field>
           <label className="flex items-center gap-2 pt-6 text-sm">
@@ -235,7 +263,7 @@ function PatientPickerModal({
                 <span>
                   <span className="block font-medium">{patient.fullName}</span>
                   <span className="text-xs text-neutral-500">
-                    {formatDateRu(patient.birthDate)}
+                    {patient.birthDate ? formatDateRu(patient.birthDate) : "Дата рождения не указана"}
                   </span>
                 </span>
                 <span className="text-xs font-medium">
@@ -256,16 +284,19 @@ function EntitySelect({
   items,
   defaultValue,
   withCode,
+  required = true,
 }: {
   label: string;
   name: string;
   items: EntityOption[];
   defaultValue: string;
   withCode?: boolean;
+  required?: boolean;
 }) {
   return (
     <Field label={label}>
-      <Select name={name} defaultValue={defaultValue} required>
+      <Select name={name} defaultValue={defaultValue} required={required}>
+        {!required ? <option value="">Не выбрано</option> : null}
         {items.map((item) => (
           <option key={item._id} value={item._id}>
             {withCode ? `${item.code ?? ""} ${item.name ?? ""}` : item.fullName ?? item.name}

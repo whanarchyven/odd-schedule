@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Госпитализации",
+  title: "График госпитализаций",
   description: "Сервис записи пациентов на госпитализацию",
 };
 

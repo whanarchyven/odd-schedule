@@ -11,6 +11,11 @@ import type {
   PatientDetails,
   PatientDocument,
 } from "@/entities/patient/model/types";
+import {
+  admissionDiagnosisLabel,
+  financingLabel,
+  sourceLabel,
+} from "@/entities/admission/model/options";
 import { formatDateRu, formatDateTimeRu } from "@/shared/lib/date";
 import {
   Badge,
@@ -118,8 +123,8 @@ function PatientInfoTab({ details }: { details: LoadedPatientDetails }) {
       lastName: String(form.get("lastName")),
       firstName: String(form.get("firstName")),
       middleName: String(form.get("middleName") || "") || undefined,
-      birthDate: String(form.get("birthDate")),
-      phone: String(form.get("phone")),
+      birthDate: String(form.get("birthDate") || "") || undefined,
+      phone: String(form.get("phone") || "") || undefined,
       omsNumber: String(form.get("omsNumber") || "") || undefined,
       medicalRecordNumber:
         String(form.get("medicalRecordNumber") || "") || undefined,
@@ -143,7 +148,9 @@ function PatientInfoTab({ details }: { details: LoadedPatientDetails }) {
         </div>
         <div>
           <p className="font-semibold">{patient.fullName}</p>
-          <p className="text-sm text-neutral-500">{formatDateRu(patient.birthDate)}</p>
+          <p className="text-sm text-neutral-500">
+            {patient.birthDate ? formatDateRu(patient.birthDate) : "Дата рождения не указана"}
+          </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           {patient.omsNumber ? <Badge>ОМС {patient.omsNumber}</Badge> : null}
@@ -162,10 +169,10 @@ function PatientInfoTab({ details }: { details: LoadedPatientDetails }) {
             <Input name="middleName" defaultValue={patient.middleName ?? ""} />
           </Field>
           <Field label="Дата рождения*">
-            <Input name="birthDate" type="date" defaultValue={patient.birthDate} required />
+            <Input name="birthDate" type="date" defaultValue={patient.birthDate ?? ""} />
           </Field>
           <Field label="Телефон*">
-            <Input name="phone" defaultValue={patient.phone} required />
+            <Input name="phone" defaultValue={patient.phone ?? ""} />
           </Field>
           <Field label="Полис ОМС">
             <Input name="omsNumber" defaultValue={patient.omsNumber ?? ""} />
@@ -524,12 +531,9 @@ function PatientAdmissionsTab({ admissions }: { admissions: PatientAdmission[] }
                 </p>
               </div>
               <div>
-                <p>
-                  {admission.diagnosis?.code} {admission.diagnosis?.name}
-                </p>
+                <p>{admissionDiagnosisLabel(admission)}</p>
                 <p className="text-xs text-neutral-500">
-                  {admission.financing === "oms" ? "ОМС" : "Частное"} ·{" "}
-                  {admission.source}
+                  {financingLabel(admission.financing)} · {sourceLabel(admission.source)}
                 </p>
               </div>
               <div className="flex items-center justify-end gap-2">

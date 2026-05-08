@@ -44,16 +44,21 @@ export const dashboard = query({
 
     for (const row of rows) {
       if (row.isConfirmed) confirmed += 1;
-      inc(bySource, row.source);
+      inc(bySource, row.source ?? "unspecified");
       inc(byFinancing, row.financing);
       inc(byVisitType, row.visitType);
       inc(timeline, row.date);
 
       const [diagnosis, department] = await Promise.all([
-        ctx.db.get(row.diagnosisId),
+        row.diagnosisId ? ctx.db.get(row.diagnosisId) : null,
         ctx.db.get(row.departmentId),
       ]);
-      inc(byDiagnosis, diagnosis ? `${diagnosis.code} ${diagnosis.name}` : "Без МКБ");
+      inc(
+        byDiagnosis,
+        diagnosis
+          ? `${diagnosis.code} ${diagnosis.name}`
+          : row.customDiagnosis ?? "Без диагноза",
+      );
       inc(byDepartment, department?.name ?? "Без отделения");
     }
 

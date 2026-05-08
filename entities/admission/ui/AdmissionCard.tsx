@@ -1,6 +1,10 @@
 "use client";
 
 import type { AdmissionRow } from "@/entities/admission/model/types";
+import {
+  admissionDiagnosisShortLabel,
+  financingShortLabel,
+} from "@/entities/admission/model/options";
 import { calculateAge } from "@/entities/schedule/lib/date";
 
 export function AdmissionCard({
@@ -12,7 +16,8 @@ export function AdmissionCard({
 }) {
   const minor =
     admission.patient &&
-    calculateAge(admission.patient.birthDate, admission.date) < 18;
+    admission.patient.birthDate &&
+    calculateAge(admission.patient.birthDate, admission.date)! < 18;
 
   return (
     <button
@@ -33,10 +38,10 @@ export function AdmissionCard({
         </span>
         <div className="flex items-center justify-between">
         <span className="pt-px text-center font-medium">
-          {admission.diagnosis?.code ?? "МКБ"}
+          {admissionDiagnosisShortLabel(admission)}
         </span>
         <span className="pt-px text-center">
-          {admission.financing === "oms" ? "ОМС" : "Част."}
+          {financingShortLabel(admission.financing)}
         </span>
         <span
           className="rounded-[3px] px-1 pt-px text-center text-[10px] font-medium text-white"

@@ -1,4 +1,5 @@
 import type { Id } from "@/convex/_generated/dataModel";
+import type { AdmissionSource, Financing } from "./options";
 
 export type ReferenceDoc = {
   _id: string;
@@ -13,17 +14,18 @@ export type AdmissionRow = {
   date: string;
   patientId: Id<"patients">;
   departmentId: Id<"departments">;
-  diagnosisId: Id<"diagnoses">;
-  doctorId: Id<"doctors">;
-  financing: "oms" | "private";
+  diagnosisId?: Id<"diagnoses">;
+  customDiagnosis?: string;
+  doctorId?: Id<"doctors">;
+  financing: Financing;
   visitType: "primary" | "repeat";
   isConfirmed: boolean;
-  source: "osmp" | "appointment" | "private";
+  source?: AdmissionSource;
   comment?: string;
   patient?: {
     _id: Id<"patients">;
     fullName: string;
-    birthDate: string;
+    birthDate?: string;
     phone?: string;
   } | null;
   department?: ReferenceDoc | null;
@@ -42,5 +44,5 @@ export type EntityOption = {
 export type PatientOption = {
   _id: Id<"patients">;
   fullName: string;
-  birthDate: string;
+  birthDate?: string;
 };

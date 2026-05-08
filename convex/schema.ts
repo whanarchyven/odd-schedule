@@ -69,12 +69,13 @@ export default defineSchema({
     middleName: v.optional(v.string()),
     fullName: v.string(),
     searchText: v.string(),
-    birthDate: v.string(),
-    phone: v.string(),
+    birthDate: v.optional(v.string()),
+    phone: v.optional(v.string()),
     omsNumber: v.optional(v.string()),
     medicalRecordNumber: v.optional(v.string()),
     snils: v.optional(v.string()),
     photoStorageId: v.optional(v.id("_storage")),
+    legacyImportKey: v.optional(v.string()),
     createdBy: v.id("staffProfiles"),
     updatedBy: v.id("staffProfiles"),
     createdAt: v.number(),
@@ -83,6 +84,7 @@ export default defineSchema({
     .index("by_omsNumber", ["omsNumber"])
     .index("by_snils", ["snils"])
     .index("by_medicalRecordNumber", ["medicalRecordNumber"])
+    .index("by_legacyImportKey", ["legacyImportKey"])
     .index("by_createdAt", ["createdAt"])
     .searchIndex("search_patients", { searchField: "searchText" }),
 
@@ -120,16 +122,37 @@ export default defineSchema({
     date: v.string(),
     patientId: v.id("patients"),
     departmentId: v.id("departments"),
-    diagnosisId: v.id("diagnoses"),
-    doctorId: v.id("doctors"),
+    diagnosisId: v.optional(v.id("diagnoses")),
+    customDiagnosis: v.optional(v.string()),
+    doctorId: v.optional(v.id("doctors")),
     // Deprecated: earlier builds stored a duplicate "attending doctor".
     // New code uses doctorId as the single hospitalization doctor.
     attendingDoctorId: v.optional(v.id("doctors")),
-    financing: v.union(v.literal("oms"), v.literal("private")),
+    financing: v.union(
+      v.literal("oms"),
+      v.literal("vmpOms"),
+      v.literal("vmp"),
+      v.literal("paid"),
+      v.literal("fund"),
+      // Deprecated: legacy value, shown as "ПЛАТНО" in UI.
+      v.literal("private"),
+    ),
     visitType: v.union(v.literal("primary"), v.literal("repeat")),
     isConfirmed: v.boolean(),
-    source: v.union(v.literal("osmp"), v.literal("appointment"), v.literal("private")),
+    source: v.optional(
+      v.union(
+        v.literal("planned"),
+        v.literal("tmk"),
+        v.literal("office"),
+        v.literal("kdc"),
+        // Deprecated legacy values kept for existing records.
+        v.literal("osmp"),
+        v.literal("appointment"),
+        v.literal("private"),
+      ),
+    ),
     comment: v.optional(v.string()),
+    legacyImportKey: v.optional(v.string()),
     createdBy: v.id("staffProfiles"),
     updatedBy: v.id("staffProfiles"),
     createdAt: v.number(),
@@ -142,6 +165,7 @@ export default defineSchema({
     .index("by_diagnosisId", ["diagnosisId"])
     .index("by_source", ["source"])
     .index("by_financing", ["financing"])
+    .index("by_legacyImportKey", ["legacyImportKey"])
     .index("by_date_and_departmentId", ["date", "departmentId"])
     .index("by_date_and_source", ["date", "source"]),
 
@@ -193,12 +217,20 @@ export default defineSchema({
     unconfirmed: v.number(),
     oms: v.number(),
     private: v.number(),
+    vmpOms: v.optional(v.number()),
+    vmp: v.optional(v.number()),
+    paid: v.optional(v.number()),
+    fund: v.optional(v.number()),
     primary: v.number(),
     repeat: v.number(),
     bySource: v.object({
       osmp: v.number(),
       appointment: v.number(),
       private: v.number(),
+      planned: v.optional(v.number()),
+      tmk: v.optional(v.number()),
+      office: v.optional(v.number()),
+      kdc: v.optional(v.number()),
     }),
     updatedAt: v.number(),
   }).index("by_date", ["date"]),

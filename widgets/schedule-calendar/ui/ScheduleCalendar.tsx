@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { Plus, Printer } from "lucide-react";
 import { jsPDF } from "jspdf";
@@ -11,6 +11,12 @@ import type {
   EntityOption,
   PatientOption,
 } from "@/entities/admission/model/types";
+import {
+  admissionDiagnosisLabel,
+  financingLabel,
+  sourceLabel,
+  visitTypeLabel,
+} from "@/entities/admission/model/options";
 import { AdmissionCard } from "@/entities/admission/ui/AdmissionCard";
 import {
   dateKey,
@@ -89,9 +95,20 @@ export function ScheduleCalendar() {
 
   const days = useMemo(() => daysInYear(year), [year]);
 
+  useEffect(() => {
+    const currentMonthIndex = new Date().getMonth();
+    const frame = window.requestAnimationFrame(() => {
+      monthRefs.current[currentMonthIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   async function printWeek(day: string) {
     const week = nextWeekDays(day);
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: "landscape" });
     await registerCyrillicFont(doc);
     let cursorY = 16;
 
@@ -103,7 +120,7 @@ export function ScheduleCalendar() {
 
     for (const dayKey of week) {
       const dayRows = admissions.filter((admission) => admission.date === dayKey);
-      if (cursorY > 260) {
+      if (cursorY > doc.internal.pageSize.getHeight() - 20) {
         doc.addPage();
         doc.setFont("ArialUnicode", "normal");
         cursorY = 16;
@@ -122,6 +139,7 @@ export function ScheduleCalendar() {
           "Отделение",
           "Диагноз",
           "Финанс.",
+          "Источник",
           "Приём",
           "Статус",
         ]],
@@ -132,12 +150,13 @@ export function ScheduleCalendar() {
                 admission.patient?.phone ?? "",
                 admission.doctor?.fullName ?? "",
                 admission.department?.name ?? "",
-                `${admission.diagnosis?.code ?? ""} ${admission.diagnosis?.name ?? ""}`.trim(),
-                admission.financing === "oms" ? "ОМС" : "Частное",
-                admission.visitType === "repeat" ? "Повторный" : "Первичный",
+                admissionDiagnosisLabel(admission),
+                financingLabel(admission.financing),
+                sourceLabel(admission.source),
+                visitTypeLabel(admission.visitType),
                 admission.isConfirmed ? "Подтвержден" : "Не подтвержден",
               ])
-            : [["Нет записей", "", "", "", "", "", "", ""]],
+            : [["Нет записей", "", "", "", "", "", "", "", ""]],
         margin: { left: 14, right: 14 },
         styles: {
           font: "ArialUnicode",
@@ -155,11 +174,12 @@ export function ScheduleCalendar() {
           0: { cellWidth: 32 },
           1: { cellWidth: 22 },
           2: { cellWidth: 26 },
-          3: { cellWidth: 26 },
-          4: { cellWidth: 34 },
-          5: { cellWidth: 17 },
+          3: { cellWidth: 24 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 18 },
           6: { cellWidth: 18 },
-          7: { cellWidth: 21 },
+          7: { cellWidth: 18 },
+          8: { cellWidth: 20 },
         },
         didParseCell: (data) => {
           if (data.section !== "body" || data.column.index !== 2) return;
@@ -195,7 +215,7 @@ export function ScheduleCalendar() {
               onChange={(event) => setYear(Number(event.target.value))}
               className="w-28"
             >
-              {[year - 1, year, year + 1].map((item) => (
+              {Array.from({ length: 8 }, (_, index) => 2020 + index).map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </Select>

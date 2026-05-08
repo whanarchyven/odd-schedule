@@ -50,8 +50,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Activity size={16} />
               </div>
               <div>
-                <p className="text-xs font-semibold">Госпитализации</p>
-                <p className="text-[10px] text-neutral-500">Плановый приём</p>
+                <p className="text-xs font-semibold">График госпитализаций</p>
+                <p className="text-[10px] text-neutral-500">НЦЗД</p>
               </div>
             </Link>
             <div className="flex items-center gap-2 lg:hidden">
