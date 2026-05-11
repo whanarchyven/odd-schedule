@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
@@ -16,6 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "График госпитализаций",
   description: "Сервис записи пациентов на госпитализацию",
+};
+
+/** Фиксированная десктопная ширина: без адаптивной «мобильной» вёрстки в viewport. */
+export const viewport: Viewport = {
+  width: 1280,
+  initialScale: 1,
 };
 
 export default function RootLayout({

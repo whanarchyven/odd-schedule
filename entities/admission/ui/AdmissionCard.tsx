@@ -14,10 +14,10 @@ export function AdmissionCard({
   admission: AdmissionRow;
   onClick: () => void;
 }) {
-  const minor =
+  const toddler =
     admission.patient &&
     admission.patient.birthDate &&
-    calculateAge(admission.patient.birthDate, admission.date)! < 18;
+    calculateAge(admission.patient.birthDate, admission.date)! < 3;
 
   return (
     <button
@@ -29,7 +29,7 @@ export function AdmissionCard({
       <div className="flex flex-col gap-1 px-1 py-0.5">
         <span
           className={
-            minor
+            toddler
               ? "whitespace-normal break-words text-[11px] font-semibold text-[#ff0000]"
               : "whitespace-normal break-words text-[11px] font-semibold"
           }

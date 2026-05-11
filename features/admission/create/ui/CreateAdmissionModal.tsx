@@ -29,6 +29,7 @@ import {
 export function CreateAdmissionModal({
   date,
   onClose,
+  scheduledPatientIdsForDate,
   patients,
   patientQuery,
   setPatientQuery,
@@ -38,6 +39,7 @@ export function CreateAdmissionModal({
 }: {
   date: string | null;
   onClose: () => void;
+  scheduledPatientIdsForDate: Id<"patients">[];
   patients: PatientOption[];
   patientQuery: string;
   setPatientQuery: (value: string) => void;
@@ -52,6 +54,15 @@ export function CreateAdmissionModal({
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedDiagnosisId, setSelectedDiagnosisId] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
+
+  const patientAlreadyOnThisDate = useMemo(() => {
+    if (patientMode !== "existing" || !selectedPatientId || !date) {
+      return false;
+    }
+    return scheduledPatientIdsForDate.includes(
+      selectedPatientId as Id<"patients">,
+    );
+  }, [date, patientMode, scheduledPatientIdsForDate, selectedPatientId]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,6 +79,7 @@ export function CreateAdmissionModal({
     ) {
       return;
     }
+
     if (patientMode === "new") {
       patientId = await createPatient({
         lastName: String(form.get("lastName")),
@@ -105,7 +117,10 @@ export function CreateAdmissionModal({
       description="Шаг 1: пациент. Шаг 2: параметры госпитализации."
       className="max-w-5xl"
     >
-      <form className="grid gap-5 lg:grid-cols-2" onSubmit={(event) => void onSubmit(event)}>
+      <form
+        className="grid grid-cols-2 gap-5"
+        onSubmit={(event) => void onSubmit(event)}
+      >
         <Card>
           <div className="mb-4 flex gap-2">
             <Button
@@ -140,9 +155,17 @@ export function CreateAdmissionModal({
                 onSelect={setSelectedPatientId}
                 required
               />
+              {patientAlreadyOnThisDate ? (
+                <p
+                  className="text-[11px] font-medium leading-snug text-[#c22b10]"
+                  role="status"
+                >
+                  Пациент уже записан на эту дату.
+                </p>
+              ) : null}
             </div>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Фамилия*"><Input name="lastName" required /></Field>
               <Field label="Имя*"><Input name="firstName" required /></Field>
               <Field label="Отчество"><Input name="middleName" /></Field>
@@ -156,7 +179,7 @@ export function CreateAdmissionModal({
         </Card>
 
         <Card>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             <EntitySearchableSelect
               label="Отделение"
               name="departmentId"
@@ -212,12 +235,12 @@ export function CreateAdmissionModal({
               <input name="isConfirmed" type="checkbox" className="h-4 w-4" />
               Подтверждена
             </label>
-            <Field label="Комментарий" className="md:col-span-2">
+            <Field label="Комментарий" className="col-span-2">
               <Textarea name="comment" />
             </Field>
           </div>
         </Card>
-        <div className="lg:col-span-2 flex justify-end gap-2">
+        <div className="col-span-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
             Отмена
           </Button>

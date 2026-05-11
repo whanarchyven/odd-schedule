@@ -43,38 +43,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white text-neutral-950">
       <header className="sticky top-0 z-20 border-b bg-white/90 backdrop-blur">
-        <div className="flex min-h-12 flex-col gap-2 px-2 py-2 lg:flex-row lg:items-center lg:justify-between lg:px-3">
-          <div className="flex items-center justify-between gap-4">
-            <Link href="/schedule" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-black text-white">
-                <Activity size={16} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold">График госпитализаций</p>
-                <p className="text-[10px] text-neutral-500">НЦЗД</p>
-              </div>
-            </Link>
-            <div className="flex items-center gap-2 lg:hidden">
-              {profile ? (
-                <Badge variant={isAdmin ? "inverse" : "neutral"}>
-                  {isAdmin ? "Админ" : "Врач"}
-                </Badge>
-              ) : null}
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() =>
-                  void signOut().then(() => {
-                    router.push("/signin");
-                  })
-                }
-              >
-                <LogOut size={16} />
-              </Button>
+        <div className="flex min-h-12 items-center justify-between gap-3 px-3 py-2">
+          <Link href="/schedule" className="flex shrink-0 items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-black text-white">
+              <Activity size={16} />
             </div>
-          </div>
+            <div>
+              <p className="text-xs font-semibold">График госпитализаций</p>
+              <p className="text-[10px] text-neutral-500">НЦЗД</p>
+            </div>
+          </Link>
 
-          <nav className="flex gap-1 overflow-x-auto rounded-[10px] border bg-neutral-50 p-0.5">
+          <nav className="mx-2 flex min-w-0 flex-1 justify-center gap-1 rounded-[10px] border bg-neutral-50 p-0.5">
             {nav
               .filter((item) => !item.adminOnly || isAdmin)
               .map((item) => {
@@ -98,14 +78,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               })}
           </nav>
 
-          <div className="hidden items-center gap-2 lg:flex">
-            <div className="mr-2 text-right">
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="mr-1 text-right">
               <p className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">
                 Стационар
               </p>
-              <p className="text-xs font-semibold tracking-[-0.025em]">
-                Сервис записи
-              </p>
+              <p className="text-xs font-semibold tracking-[-0.025em]">Сервис записи</p>
             </div>
             {profile ? (
               <Badge variant={isAdmin ? "inverse" : "neutral"}>
@@ -128,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="px-2 py-3 lg:px-3">{children}</main>
+      <main className="px-3 py-3">{children}</main>
     </div>
   );
 }
@@ -143,7 +121,7 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+    <div className="mb-3 flex flex-row flex-wrap items-end justify-between gap-2">
       <div>
         <h2 className="text-xl font-semibold tracking-[-0.04em]">{title}</h2>
         <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">

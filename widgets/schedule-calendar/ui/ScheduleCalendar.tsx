@@ -32,6 +32,7 @@ import { EditAdmissionModal } from "@/features/admission/edit/ui/EditAdmissionMo
 import { AppShell, PageHeader } from "@/widgets/app-shell/ui/AppShell";
 import { formatDateRu, formatWeekdayRu } from "@/shared/lib/date";
 import { Badge, Select } from "@/shared/ui";
+import { cn } from "@/shared/lib/cn";
 
 function arrayBufferToBase64(buffer: ArrayBuffer) {
   const bytes = new Uint8Array(buffer);
@@ -274,10 +275,17 @@ export function ScheduleCalendar() {
                   const dayAdmissions = grouped.get(key) ?? [];
                   const isWeekEnd = (day.getDay() || 7) === 7;
                   const meta = weekdayMeta(day);
+                  const dayCount = dayAdmissions.length;
+                  const crowdedDay = dayCount > 15;
                   return (
                     <div
                       key={key}
-                      className="min-h-28 rounded-[6px] border bg-white p-0.5"
+                      className={cn(
+                        "min-h-28 rounded-[6px] border p-0.5",
+                        crowdedDay
+                          ? "bg-red-500"
+                          : "bg-white",
+                      )}
                       style={{ borderColor: meta.border }}
                     >
                       <div
@@ -289,6 +297,9 @@ export function ScheduleCalendar() {
                       >
                         <span className="truncate text-[10px] font-semibold leading-4">
                           {dayTitle(day)}
+                          <span className="ml-1 font-normal text-neutral-700 tabular-nums">
+                            · {dayCount}
+                          </span>
                         </span>
                         <div className="flex gap-0.5">
                           <button
@@ -332,6 +343,11 @@ export function ScheduleCalendar() {
       <CreateAdmissionModal
         date={modalDate}
         onClose={() => setModalDate(null)}
+        scheduledPatientIdsForDate={
+          modalDate
+            ? (grouped.get(modalDate) ?? []).map((row) => row.patientId)
+            : []
+        }
         patients={patients}
         patientQuery={patientQuery}
         setPatientQuery={setPatientQuery}
