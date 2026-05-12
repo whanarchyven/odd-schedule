@@ -30,6 +30,7 @@ export function CreateAdmissionModal({
   date,
   onClose,
   scheduledPatientIdsForDate,
+  defaultDepartmentId,
   patients,
   patientQuery,
   setPatientQuery,
@@ -40,6 +41,8 @@ export function CreateAdmissionModal({
   date: string | null;
   onClose: () => void;
   scheduledPatientIdsForDate: Id<"patients">[];
+  /** Первое отделение из списка — подставляется при открытии и после успешного создания. */
+  defaultDepartmentId: string;
   patients: PatientOption[];
   patientQuery: string;
   setPatientQuery: (value: string) => void;
@@ -49,9 +52,11 @@ export function CreateAdmissionModal({
 }) {
   const createPatient = useMutation(api.patients.create);
   const createAdmission = useMutation(api.admissions.create);
+  const [formKey, setFormKey] = useState(0);
   const [patientMode, setPatientMode] = useState<"existing" | "new">("existing");
   const [selectedPatientId, setSelectedPatientId] = useState("");
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [selectedDepartmentId, setSelectedDepartmentId] =
+    useState(defaultDepartmentId);
   const [selectedDiagnosisId, setSelectedDiagnosisId] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
 
@@ -106,6 +111,15 @@ export function CreateAdmissionModal({
       source: String(form.get("source") || "") as AdmissionSource,
       comment: String(form.get("comment") || "") || undefined,
     });
+    setPatientMode("existing");
+    setSelectedPatientId("");
+    setSelectedDiagnosisId("");
+    setSelectedDoctorId("");
+    setPatientQuery("");
+    if (defaultDepartmentId) {
+      setSelectedDepartmentId(defaultDepartmentId);
+    }
+    setFormKey((k) => k + 1);
     onClose();
   }
 
@@ -118,6 +132,7 @@ export function CreateAdmissionModal({
       className="max-w-5xl"
     >
       <form
+        key={formKey}
         className="grid grid-cols-2 gap-5"
         onSubmit={(event) => void onSubmit(event)}
       >

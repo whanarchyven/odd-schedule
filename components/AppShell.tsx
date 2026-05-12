@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Badge, Button } from "@/components/ui";
+import { HeaderPatientSearch } from "@/widgets/header-patient-search/ui/HeaderPatientSearch";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -79,6 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
+            {profile ? <HeaderPatientSearch /> : null}
             <div className="mr-1 text-right">
               <p className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">
                 Стационар

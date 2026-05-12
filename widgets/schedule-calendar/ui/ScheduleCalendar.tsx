@@ -69,6 +69,7 @@ export function ScheduleCalendar() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [patientQuery, setPatientQuery] = useState("");
   const [modalDate, setModalDate] = useState<string | null>(null);
+  const [createModalNonce, setCreateModalNonce] = useState(0);
   const [editingAdmission, setEditingAdmission] = useState<AdmissionRow | null>(null);
   const monthRefs = useRef<Array<HTMLElement | null>>([]);
   const startDate = `${year}-01-01`;
@@ -305,7 +306,10 @@ export function ScheduleCalendar() {
                           <button
                             type="button"
                             className="rounded-[4px] bg-white/60 p-0.5 hover:bg-white"
-                            onClick={() => setModalDate(key)}
+                            onClick={() => {
+                              setCreateModalNonce((n) => n + 1);
+                              setModalDate(key);
+                            }}
                             title="Добавить госпитализацию"
                           >
                             <Plus size={11} />
@@ -341,6 +345,7 @@ export function ScheduleCalendar() {
       </div>
 
       <CreateAdmissionModal
+        key={`${modalDate ?? "closed"}-${createModalNonce}-${departments[0]?._id ?? ""}`}
         date={modalDate}
         onClose={() => setModalDate(null)}
         scheduledPatientIdsForDate={
@@ -348,6 +353,7 @@ export function ScheduleCalendar() {
             ? (grouped.get(modalDate) ?? []).map((row) => row.patientId)
             : []
         }
+        defaultDepartmentId={departments[0]?._id ?? ""}
         patients={patients}
         patientQuery={patientQuery}
         setPatientQuery={setPatientQuery}

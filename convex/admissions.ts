@@ -169,9 +169,62 @@ export const listByPatient = query({
     const rows = await ctx.db
       .query("admissions")
       .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
-      .order("desc")
-      .take(100);
-    return await Promise.all(rows.map((row) => enrichAdmission(ctx, row)));
+      .take(500);
+    rows.sort((a, b) =>
+      a.date < b.date ? 1 : a.date > b.date ? -1 : b._creationTime - a._creationTime,
+    );
+    const top = rows.slice(0, 100);
+    return await Promise.all(top.map((row) => enrichAdmission(ctx, row)));
+  },
+});
+
+/** Поиск пациентов по ФИО/документам + список госпитализаций (дата ↓). */
+export const searchPatientsWithAdmissions = query({
+  args: {
+    query: v.string(),
+    patientLimit: v.optional(v.number()),
+    admissionsPerPatient: v.optional(v.number()),
+  },
+  returns: v.array(v.any()),
+  handler: async (ctx, args) => {
+    await requireDoctorOrAdmin(ctx);
+    const raw = args.query.trim();
+    if (raw.length < 2) {
+      return [];
+    }
+    const patientLimit = Math.min(args.patientLimit ?? 12, 20);
+    const admissionsPerPatient = Math.min(args.admissionsPerPatient ?? 15, 40);
+
+    const patients = await ctx.db
+      .query("patients")
+      .withSearchIndex("search_patients", (q) => q.search("searchText", raw))
+      .take(patientLimit);
+
+    const result = [];
+
+    for (const patient of patients) {
+      const rows = await ctx.db
+        .query("admissions")
+        .withIndex("by_patientId", (q) => q.eq("patientId", patient._id))
+        .take(200);
+      rows.sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b._creationTime - a._creationTime,
+      );
+      const slice = rows.slice(0, admissionsPerPatient);
+      const admissions = await Promise.all(
+        slice.map((row) => enrichAdmission(ctx, row)),
+      );
+      result.push({
+        patient: {
+          _id: patient._id,
+          fullName: patient.fullName,
+          birthDate: patient.birthDate,
+        },
+        admissions,
+      });
+    }
+
+    return result;
   },
 });
 
